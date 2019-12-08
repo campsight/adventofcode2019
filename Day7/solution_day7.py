@@ -4,7 +4,6 @@ phases = range(5)
 print(phases)
 possible_combinations = itertools.permutations(phases)
 
-
 def extract_modes(instruction):
     instruction_set = [int(x[0]) for x in instruction]
     #print(instruction_set)
@@ -17,7 +16,21 @@ def extract_modes(instruction):
         instruction_set.reverse()
         return ([opcode] + instruction_set)
 
+# helper function to make process_step more readable
+# 'solves' the instruction mode (value vs address) topic
+def get_instruction_values(my_list, instruction_pointer, instruction_mode, nb_of_params = 1):
+    while (len(instruction_mode) < (nb_of_params+1)): instruction_mode.append(0)
+    values = []
+    for i in range(nb_of_params):
+        param = my_list[instruction_pointer + i + 1]
+        if instruction_mode[i+1] == 0:
+            values.append(my_list[param])
+        else:
+            values.append(param)
+    return values
 
+# AoC 2019 processor. Input: a program (my_list), an instruction_pointer (pointing to next instruction), the inputs, outputs and haltcode
+# haltcode = 1 to continue, 0 to wait for input and 99 if the program halts
 def process_step(my_list, instruction_pointer, input=[], output=[], haltcode=1):
     if (haltcode == 0): return (my_list, output, instruction_pointer, input, haltcode)
     if (haltcode == 99): return (my_list, output, instruction_pointer, input, haltcode)
@@ -26,47 +39,14 @@ def process_step(my_list, instruction_pointer, input=[], output=[], haltcode=1):
     instruction_mode = extract_modes(str(instruction))
     opcode = instruction_mode[0]
     if (opcode == 1):
-        params = 3
-        while (len(instruction_mode) < (params+1)): instruction_mode.append(0)
-        # add those things
-        param1 = my_list[instruction_pointer + 1]
-        param2 = my_list[instruction_pointer + 2]
-        param3 = my_list[instruction_pointer + 3]
-        if (instruction_mode[1] == 0):
-            value1 = my_list[param1]
-        else:
-            value1 = param1
-        if (instruction_mode[2] == 0):
-            value2 = my_list[param2]
-        else:
-            value2 = param2
-        if (instruction_mode[3] == 1): print("strange stuff in add third param")
-        my_list[param3] = value1 + value2
-        # print("recursive call: ", instruction_pointer+4, my_list)
+        values = get_instruction_values(my_list, instruction_pointer, instruction_mode, 2)
+        my_list[my_list[instruction_pointer + 3]] = values[0] + values[1]
         return process_step(my_list, instruction_pointer + 4, input, output, 1)
     elif (opcode == 2):
-        params = 3
-        while (len(instruction_mode) < (params+1)): instruction_mode.append(0)
-        # multiply those things
-        param1 = my_list[instruction_pointer + 1]
-        param2 = my_list[instruction_pointer + 2]
-        param3 = my_list[instruction_pointer + 3]
-        if (instruction_mode[1] == 0):
-            value1 = my_list[param1]
-        else:
-            value1 = param1
-        if (instruction_mode[2] == 0):
-            value2 = my_list[param2]
-        else:
-            value2 = param2
-        if (instruction_mode[3] == 1): print("strange stuff in add third param")
-        my_list[param3] = value1 * value2
-        # print("recursive call: ", instruction_pointer+4, my_list)
+        values = get_instruction_values(my_list, instruction_pointer, instruction_mode, 2)
+        my_list[my_list[instruction_pointer + 3]] = values[0] * values[1]
         return process_step(my_list, instruction_pointer + 4, input, output, 1)
     elif (opcode == 3): #read input - but could be that it needs to wait if there is non
-        params = 1
-        while (len(instruction_mode) < (params+1)): instruction_mode.append(0)
-        #put value at its own address
         store_pos = my_list[instruction_pointer + 1]
         if (len(input) > 0):
             my_list[store_pos] = input.pop(0)
@@ -74,50 +54,22 @@ def process_step(my_list, instruction_pointer, input=[], output=[], haltcode=1):
         else: #no input anymore => halt and don't move the instruction pointer
             return process_step(my_list, instruction_pointer, input, output, 0)
     elif (opcode == 4):
-        params = 1
-        while (len(instruction_mode) < (params+1)): instruction_mode.append(0)
-        if (instruction_mode[1]==0):
-            output.append(my_list[my_list[instruction_pointer+1]])
-        else:
-            output.append(my_list[instruction_pointer+1])
+        values = get_instruction_values(my_list, instruction_pointer, instruction_mode, 1)
+        output.append(values[0])
         return process_step(my_list, instruction_pointer + 2, input, output, 1)
     elif ((opcode == 5) or (opcode == 6)): #jump-if true(5) or false(6)
-        params = 2
-        while (len(instruction_mode) < (params+1)): instruction_mode.append(0)
-        #jump if parameter is non-zero
-        param1 = my_list[instruction_pointer + 1]
-        if (instruction_mode[1] == 0):
-            cond = my_list[param1]
-        else:
-            cond = param1
+        values = get_instruction_values(my_list, instruction_pointer, instruction_mode, 2)
+        cond = values[0]
         if (((opcode == 5) and (cond != 0)) or ((opcode == 6) and (cond ==0))):
-            param2 = my_list[instruction_pointer + 2]
-            if (instruction_mode[2] == 0):
-                address = my_list[param2]
-            else:
-                address = param2
-            return process_step(my_list, address, input, output, 1)
+            return process_step(my_list, values[1], input, output, 1)
         else:
-            return process_step(my_list, instruction_pointer + params + 1, input, output, 1)
+            return process_step(my_list, instruction_pointer + 3, input, output, 1)
     elif ((opcode == 7) or (opcode == 8)):
-        params = 3
-        while (len(instruction_mode) < (params+1)): instruction_mode.append(0)
-        param1 = my_list[instruction_pointer + 1]
-        param2 = my_list[instruction_pointer + 2]
-        param3 = my_list[instruction_pointer + 3]
-        if (instruction_mode[1] == 0):
-            value1 = my_list[param1]
+        values = get_instruction_values(my_list, instruction_pointer, instruction_mode, 2)
+        if (((opcode == 7) and (values[0] < values[1])) or ((opcode==8) and (values[0] == values[1]))):
+            my_list[my_list[instruction_pointer + 3]] = 1
         else:
-            value1 = param1
-        if (instruction_mode[2] == 0):
-            value2 = my_list[param2]
-        else:
-            value2 = param2
-        if (instruction_mode[3] == 1): print("strange stuff in add third param")
-        if (((opcode == 7) and (value1 < value2)) or ((opcode==8) and (value1==value2))):
-            my_list[param3] = 1
-        else:
-            my_list[param3] = 0
+            my_list[my_list[instruction_pointer + 3]] = 0
         return process_step(my_list, instruction_pointer + params + 1, input, output, 1)
     elif (opcode == 99):
         # print("finished", my_list)
@@ -129,7 +81,7 @@ def process_step(my_list, instruction_pointer, input=[], output=[], haltcode=1):
         return process_step(my_list, instruction_pointer + 2, input, output, -1)
 
 #test = [1,0,4,3,2]
-highest = 0
+#highest = 0
 '''for combination in possible_combinations:
     input = 0
     for phase in combination:
