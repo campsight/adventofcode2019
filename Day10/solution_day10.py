@@ -1,4 +1,5 @@
 import copy
+import math
 
 def isBetween(a, b, c):
     crossproduct = (c[1] - a[1]) * (b[0] - a[0]) - (c[0] - a[0]) * (b[1] - a[1])
@@ -80,15 +81,12 @@ for y in range(len(astroid_locations)):
 print("solution has ", max_nb_astroids, " visibles from (x,y)", solution_x, solution_y, "with visibles: ", visible_astroids)
 
 # PART 2
-# let's have some fun with quadrants :-)
-# 1st quadrant = uppper right one: lower y, higher x
-max_x = max(visible_astroids[0])
-max_y = max(visible_astroids[1])
 visible_asteroids_merged = [(visible_astroids[0][i], visible_astroids[1][i]) for i in range(0, len(visible_astroids[0]))]
-'''quadrant_1 = []
-for i in range(visible_astroids[0]):
-    asteroid_x = visible_astroids[0][i]
-    asteroid_y = visible_astroids[1][i]
-for qy in range(solution_y): #this doesn't add the solution_y itself to the quadrant
-    for qx in range(solution_x, max_x+1): # the initial x and max x should be included'''
+
+def cwsort(x):
+    return math.atan2(x[0] - solution_x, x[1] - solution_y)
+
+visible_asteroids_merged_and_sorted = sorted(visible_asteroids_merged, key=cwsort)
+
+print("solutiuon part 2: ", visible_asteroids_merged_and_sorted[max_nb_astroids-200][0]*100+visible_asteroids_merged_and_sorted[max_nb_astroids-200][1])
 
