@@ -45,4 +45,3 @@ print("Solution part 2:")
 for i in range(len(picture_split)):
     print(picture_split[i])
 
-
