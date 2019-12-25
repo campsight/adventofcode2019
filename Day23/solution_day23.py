@@ -11,9 +11,6 @@ for i in range(50):
     bot.extend_memory(10000)
     bot.run_cycle_network([i])
     bot.run_cycle_network([-1])
-    if len(bot.get_output()) > 0:
-        test = np.array(bot.get_output()).reshape(((len(bot.get_output())//3), 3))
-        # print(test[0][0])
     my_network_bots.append(bot)
 
 # prepare for repeated runnun of the network bots
@@ -48,7 +45,7 @@ while not identical_nat_reception:
         # print("Delivering package", nat, "to address 0")
         packages[0] = nat
         if nat[1] in nat_ys_received:
-            print("Solution part 2: ", nat[1])
+            print("Solution part 2:", nat[1])
             identical_nat_reception = True
         else:
             nat_ys_received.append(nat[1])

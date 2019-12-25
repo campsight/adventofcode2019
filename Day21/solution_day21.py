@@ -1,5 +1,4 @@
 import copy as cp
-import numpy as np
 
 def extract_modes(instruction):
     instruction_set = [int(x[0]) for x in instruction]
